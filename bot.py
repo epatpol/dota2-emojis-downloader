@@ -1,13 +1,14 @@
-from urllib import request
+import urllib3
+import yaml
 import os
 import re
 
 from bs4 import BeautifulSoup
 
-req = request.Request("http://dota2.gamepedia.com/Emoticons", headers={'User-Agent': 'Mozilla/5.0'})
+http = urllib3.PoolManager()
+r = http.request('get', 'http://dota2.gamepedia.com/Emoticons')
 
-html = request.urlopen(req)
-soup = BeautifulSoup(html, 'html.parser')
+soup = BeautifulSoup(r.data, 'html.parser')
 
 # get wikipedia tables
 table = soup.findAll('table', {'class':'wikitable'})
@@ -19,14 +20,13 @@ if (not os.path.exists('emojis')):
 
 for img in imgs:
     src = img.get('src')
-    response = request.urlopen(src)
     p = re.compile('.*([A-Z].*\.gif).*')
     result = p.match(src)
     filename = result.group(1)
+    if not os.path.isfile('emojis/' + filename):
 
-    with open('emojis/' + filename, 'wb') as output:
-        output.write(response.read())
+        response = request.urlopen(src)
 
-    print(result.group(1))
-        
+        with open('emojis/' + filename, 'wb') as output:
+            output.write(response.read())
 
